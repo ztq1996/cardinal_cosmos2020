@@ -1,0 +1,36 @@
+"""COSMOS2020 30-band set used by lephare.default_cosmos_config, in config order.
+key -> (lephare filter file relative to $LEPHAREDIR/filt, COSMOS2020 CLASSIC column prefix, A_lambda/E(B-V))"""
+BANDS = {
+    "u_star": ("cosmos/u_cfht.lowres", "CFHT_ustar", 4.674),
+    "u":      ("cosmos/u_new.pb",      "CFHT_u",     4.807),
+    "g":      ("hsc/gHSC.pb",          "HSC_g",      3.69),
+    "r":      ("hsc/rHSC.pb",          "HSC_r",      2.715),
+    "i":      ("hsc/iHSC.pb",          "HSC_i",      2.0),
+    "z":      ("hsc/zHSC.pb",          "HSC_z",      1.515),
+    "y":      ("hsc/yHSC.pb",          "HSC_y",      1.298),
+    "Y":      ("vista/Y.lowres",       "UVISTA_Y",   1.213),
+    "J":      ("vista/J.lowres",       "UVISTA_J",   0.874),
+    "H":      ("vista/H.lowres",       "UVISTA_H",   0.565),
+    "Ks":     ("vista/K.lowres",       "UVISTA_Ks",  0.365),
+    "IB427":  ("cosmos/IB427.lowres",  "SC_IB427",   4.261),
+    "IB464":  ("cosmos/IB464.lowres",  "SC_IB464",   3.844),
+    "IA484":  ("cosmos/IB484.lowres",  "SC_IA484",   3.622),
+    "IB505":  ("cosmos/IB505.lowres",  "SC_IB505",   3.425),
+    "IA527":  ("cosmos/IB527.lowres",  "SC_IA527",   3.265),
+    "IB574":  ("cosmos/IB574.lowres",  "SC_IB574",   2.938),
+    "IA624":  ("cosmos/IB624.lowres",  "SC_IA624",   2.694),
+    "IA679":  ("cosmos/IB679.lowres",  "SC_IA679",   2.431),
+    "IB709":  ("cosmos/IB709.lowres",  "SC_IB709",   2.29),
+    "IA738":  ("cosmos/IB738.lowres",  "SC_IA738",   2.151),
+    "IA767":  ("cosmos/IB767.lowres",  "SC_IA767",   1.997),
+    "IB827":  ("cosmos/IB827.lowres",  "SC_IB827",   1.748),
+    "NB711":  ("cosmos/NB711.lowres",  "SC_NB711",   2.268),
+    "NB816":  ("cosmos/NB816.lowres",  "SC_NB816",   1.787),
+    "NB118":  ("vista/NB118.lowres",   "UVISTA_NB118", 0.946),
+    "ch1":    ("cosmos/irac_ch1.lowres", "IRAC_CH1", 0.163),
+    "ch2":    ("cosmos/irac_ch2.lowres", "IRAC_CH2", 0.112),
+    "ch3":    ("cosmos/irac_ch3.lowres", "IRAC_CH3", 0.0),
+    "ch4":    ("cosmos/irac_ch4.lowres", "IRAC_CH4", 0.0),
+}
+BAND_KEYS = list(BANDS)
+LSST = {b: (f"lsst/total_{'y3' if b == 'y' else b}.pb", None, None) for b in "ugrizy"}
