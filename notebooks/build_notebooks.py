@@ -175,7 +175,7 @@ The same 28 bands are used in both (CLASSIC has no IRAC ch3/ch4). The point esti
 Metrics use Δz/(1+z): bias = median, σ_NMAD = 1.4826·MAD, η = fraction with |Δz|/(1+z) > 0.15.
 
 **Truth**: sim = true z (all galaxies). Data = multimatch spec-z (instrument type `s`, flag ≥ 3), restricted to official `lp_type==0` (galaxies) and 0.01 < z < 2.2 because the Cardinal light cone ends at z≈2.3.
-**The goal is the true performance of the mock itself.** The data curves are a reference; they come from a selected spec-z sample. The column "sim spec-z weighted" reweights the mock to the spec-z sample's (i, g−i, i−Ks) distribution, for an apples-to-apples global comparison.""",
+**The goal is the true performance of the mock itself.** The data curves are a reference; they come from a selected spec-z sample. **"Spec-z weighted" mock**: each mock galaxy is weighted by N_spec/N_mock in its (i, g−i, i−Ks) cell (0.5 × 0.25 × 0.25 mag), so the weighted mock has the spec-z sample's magnitude–colour distribution. **Every data–mock comparison uses this weighted mock**, because it is the apples-to-apples comparison. The unweighted mock is the mock's true performance for an i<25 sample. It is shown alongside as a reference (global table, z–z panels, the (i, z) grids, the 1-D trends, the 3-curve figure in section 3 and PIT); the difference panels are always weighted mock − data.""",
 SETUP,
 """D = load_data(); S = load_sim('sim_main')
 Ds = spec_sample(D)
@@ -215,17 +215,21 @@ zz_panel(axs[1], Ds.ztrue, Ds.lp_zBEST, title='COSMOS2020 spec-z: official lp_zB
 zz_panel(axs[2], S.ztrue, S.zp, title='Cardinal mock: all galaxies i<25')
 zz_panel(axs[3], S.ztrue, S.zp, w=S.w_spec, title='Cardinal mock: spec-z weighted')
 plt.tight_layout(); plt.show()""",
-"""fig, axs = plt.subplots(2, 4, figsize=(20, 9))
+"""md:### z_true vs z_phot in i-magnitude brackets
+Rows: COSMOS2020 spec-z, spec-z-weighted mock (the comparison), full mock (reference).""",
+"""fig, axs = plt.subplots(3, 4, figsize=(20, 13.5))
 for k, (lo, hi) in enumerate([(16, 22), (22, 23), (23, 24), (24, 25)]):
     d = Ds[(Ds.i_mag >= lo) & (Ds.i_mag < hi)]; s = S[(S.i_mag >= lo) & (S.i_mag < hi)]
-    zz_panel(axs[0, k], d.ztrue, d.zp, title=f'data spec-z, {lo}<=i<{hi}')
-    zz_panel(axs[1, k], s.ztrue, s.zp, title=f'mock, {lo}<=i<{hi}')
+    zz_panel(axs[0, k], d.ztrue, d.zp, title=f'COSMOS2020 spec-z, {lo}<=i<{hi}')
+    zz_panel(axs[1, k], s.ztrue, s.zp, w=s.w_spec, title=f'mock, spec-z weighted, {lo}<=i<{hi}')
+    zz_panel(axs[2, k], s.ztrue, s.zp, title=f'mock, all, {lo}<=i<{hi}')
 plt.tight_layout(); plt.show()""",
 """md:## 2. Bias, scatter and outlier rate on the (i-mag, z_true) grid
-Within one (i, z) cell the spec-z selection matters much less, so data and mock can be compared cell by cell. The last column is mock − data. Cells need ≥20 objects.""",
+Columns: COSMOS2020 spec-z | spec-z-weighted mock | full mock (reference) | weighted mock − data. Cells need N (N_eff for the weighted mock) ≥ 20.""",
 """ib = np.arange(18, 25.01, 0.5); zb = np.arange(0, ZMAX + 0.001, 0.2)
-G = {'data': grid2d(Ds, 'i_mag', ib, 'ztrue', zb), 'sim': grid2d(S, 'i_mag', ib, 'ztrue', zb)}
-fig = grid_figure(G, ['data', 'sim'], ib, zb, 'i_HSC', 'z_true'); plt.show()""",
+G = {'data': grid2d(Ds, 'i_mag', ib, 'ztrue', zb), 'sim_w': grid2d(S, 'i_mag', ib, 'ztrue', zb, w='w_spec'),
+     'sim': grid2d(S, 'i_mag', ib, 'ztrue', zb)}
+fig = grid_figure(G, ['data', 'sim_w', 'sim'], ib, zb, 'i_HSC', 'z_true', diff=('sim_w', 'data')); plt.show()""",
 """fig, axs = plt.subplots(1, 2, figsize=(12, 4))
 for ax, n in zip(axs, ['data', 'sim']):
     im = ax.imshow(np.log10(G[n]['N']), origin='lower', extent=[ib[0], ib[-1], zb[0], zb[-1]], aspect='auto'); plt.colorbar(im, ax=ax)
@@ -233,8 +237,9 @@ for ax, n in zip(axs, ['data', 'sim']):
 plt.tight_layout(); plt.show()""",
 """md:### Same grid in (i-mag, z_phot)
 Binning in photo-z, the quantity available in practice, and measuring the scatter of z_true around it.""",
-"""Gp = {'data': grid2d(Ds, 'i_mag', ib, 'zp', zb), 'sim': grid2d(S, 'i_mag', ib, 'zp', zb)}
-fig = grid_figure(Gp, ['data', 'sim'], ib, zb, 'i_HSC', 'z_phot (Z_MED)'); plt.show()""",
+"""Gp = {'data': grid2d(Ds, 'i_mag', ib, 'zp', zb), 'sim_w': grid2d(S, 'i_mag', ib, 'zp', zb, w='w_spec'),
+      'sim': grid2d(S, 'i_mag', ib, 'zp', zb)}
+fig = grid_figure(Gp, ['data', 'sim_w', 'sim'], ib, zb, 'i_HSC', 'z_phot (Z_MED)', diff=('sim_w', 'data')); plt.show()""",
 """md:### 1-D: metrics vs i-mag and vs z_true""",
 """fig, axs = plt.subplots(2, 4, figsize=(20, 8))
 samples = {'data': (Ds, None), 'sim': (S, None), 'sim_w': (S, 'w_spec')}
@@ -247,35 +252,40 @@ for r, (col, bins, lab) in enumerate([('i_mag', np.arange(17, 25.01, 0.5), 'i_HS
     axs[r, 0].axhline(0, c='k', lw=0.5); axs[r, 3].axhline(0.68, c='k', lw=0.5)
 axs[0, 0].legend(fontsize=7); plt.tight_layout(); plt.show()""",
 """md:## 3. Bias, scatter and outlier rate vs colour, in i-magnitude brackets
-Data (spec-z truth) vs mock (true z). Error bars are approximate statistical errors (bias: 1.25σ/√N, σ_NMAD: σ/√2N, η: binomial). Points need ≥15 objects.""",
+Error bars are approximate statistical errors (bias: 1.25σ/√N, σ_NMAD: σ/√2N, η: binomial; N → N_eff for the weighted mock). Points need N_eff ≥ 15.
+
+### All three samples (g−i)
+COSMOS2020 spec-z vs the full mock vs the spec-z-weighted mock. The difference between the two mock curves shows how much the spec-z selection (within a colour bin, mostly through the other colour and the magnitude distribution inside the bracket) changes the mock's metrics.""",
 """brackets = [(16, 22), (22, 23), (23, 24), (24, 25)]
-samples = {'data': (Ds, None), 'sim': (S, None)}
+samples_3 = {'data': (Ds, None), 'sim': (S, None), 'sim_w': (S, 'w_spec')}
+fig = curves_figure(samples_3, 'g_i', np.arange(-0.25, 3.01, 0.25), brackets, 'i_mag', 'i', 'g - i',
+                    suptitle='metrics vs g - i in i-mag brackets: data, mock (all), mock (spec-z weighted)'); plt.show()""",
+"""md:### COSMOS2020 spec-z vs spec-z-weighted mock, four colours""",
+"""samples_w = {'data': (Ds, None), 'sim_w': (S, 'w_spec')}
 for col, cb, lab in [('g_i', np.arange(-0.25, 3.01, 0.25), 'g - i'), ('i_Ks', np.arange(-0.75, 4.01, 0.25), 'i - Ks'),
                      ('u_g', np.arange(-0.25, 2.51, 0.25), 'u - g'), ('z_J', np.arange(-0.25, 2.51, 0.2), 'z - J')]:
-    fig = curves_figure(samples, col, cb, brackets, 'i_mag', 'i', lab, suptitle=f'metrics vs {lab} in i-mag brackets'); plt.show()""",
-"""md:### Same, with the mock weighted to the spec-z sample's colour–magnitude distribution
-Inside a colour bin of a magnitude bracket, the weighting only redistributes within the remaining dimension (the other colour), so the curves change little. Large changes would indicate the spec-z selection picks a particular sub-population.""",
-"""samples_w = {'data': (Ds, None), 'sim': (S, None), 'sim_w': (S, 'w_spec')}
-fig = curves_figure(samples_w, 'g_i', np.arange(-0.25, 3.01, 0.25), brackets, 'i_mag', 'i', 'g - i'); plt.show()""",
+    fig = curves_figure(samples_w, col, cb, brackets, 'i_mag', 'i', lab,
+                        suptitle=f'metrics vs {lab} in i-mag brackets: data vs spec-z-weighted mock'); plt.show()""",
 """md:## 4. Metrics vs colour at fixed magnitude, in z_true brackets
-For each i-magnitude bracket, metrics vs colour in four true-redshift brackets. Bracketing on z_true for the mock and spec-z for the data shows how much of the colour dependence is redshift dependence.""",
+For each i-magnitude bracket, metrics vs colour in four true-redshift brackets: COSMOS2020 spec-z vs the spec-z-weighted mock. Bracketing on z_true for the mock and spec-z for the data shows how much of the colour dependence is redshift dependence.""",
 """zbr = [(0.0, 0.5), (0.5, 1.0), (1.0, 1.5), (1.5, ZMAX)]
 for (lo, hi) in [(16, 23), (23, 24), (24, 25)]:
     for col, cb, lab in [('g_i', np.arange(-0.25, 3.01, 0.25), 'g - i'), ('i_Ks', np.arange(-0.75, 4.01, 0.25), 'i - Ks')]:
         sel = lambda g, lo=lo, hi=hi: (g.i_mag >= lo) & (g.i_mag < hi)
-        fig = curves_figure({'data': (Ds, None), 'sim': (S, None)}, col, cb, zbr, 'ztrue', 'z_true', lab, extra_sel=sel,
+        fig = curves_figure(samples_w, col, cb, zbr, 'ztrue', 'z_true', lab, extra_sel=sel,
                             suptitle=f'{lo} <= i < {hi}: metrics vs {lab} in z_true brackets'); plt.show()""",
 """md:### Same, bracketing on z_phot (what an analysis can actually select on)""",
 """for (lo, hi) in [(16, 23), (23, 24), (24, 25)]:
     sel = lambda g, lo=lo, hi=hi: (g.i_mag >= lo) & (g.i_mag < hi)
-    fig = curves_figure({'data': (Ds, None), 'sim': (S, None)}, 'g_i', np.arange(-0.25, 3.01, 0.25), zbr, 'zp', 'z_phot', 'g - i',
+    fig = curves_figure(samples_w, 'g_i', np.arange(-0.25, 3.01, 0.25), zbr, 'zp', 'z_phot', 'g - i',
                         extra_sel=sel, suptitle=f'{lo} <= i < {hi}: metrics vs g-i in z_phot brackets'); plt.show()""",
-"""md:## 5. 2-D colour–colour maps (g−i vs i−Ks) of the metrics, per i bracket""",
+"""md:## 5. 2-D colour–colour maps (g−i vs i−Ks) of the metrics, per i bracket
+COSMOS2020 spec-z vs the spec-z-weighted mock; the last column is weighted mock − data. Cells need N_eff ≥ 15.""",
 """gb = np.arange(-0.5, 3.51, 0.25); kb = np.arange(-1.0, 4.51, 0.25)
 for (lo, hi) in [(16, 23), (23, 24), (24, 25)]:
     d = Ds[(Ds.i_mag >= lo) & (Ds.i_mag < hi)]; s = S[(S.i_mag >= lo) & (S.i_mag < hi)]
-    Gc = {'data': grid2d(d, 'g_i', gb, 'i_Ks', kb, nmin=15), 'sim': grid2d(s, 'g_i', gb, 'i_Ks', kb, nmin=15)}
-    fig = grid_figure(Gc, ['data', 'sim'], gb, kb, 'g - i', 'i - Ks'); fig.suptitle(f'{lo} <= i < {hi}', y=1.01); plt.show()""",
+    Gc = {'data': grid2d(d, 'g_i', gb, 'i_Ks', kb, nmin=15), 'sim_w': grid2d(s, 'g_i', gb, 'i_Ks', kb, w='w_spec', nmin=15)}
+    fig = grid_figure(Gc, ['data', 'sim_w'], gb, kb, 'g - i', 'i - Ks', diff=('sim_w', 'data')); fig.suptitle(f'{lo} <= i < {hi}', y=1.01); plt.show()""",
 """md:## 6. PDF calibration: PIT and 68% interval width""",
 """fig, axs = plt.subplots(1, 3, figsize=(17, 4))
 for name, (df, w) in {'data': (Ds, None), 'sim': (S, None), 'sim_w': (S, 'w_spec')}.items():
@@ -286,12 +296,14 @@ axs[0].axhline(1, c='k', lw=0.5); axs[0].set_xlabel('PIT'); axs[0].legend(fontsi
 axs[1].set_xlabel('i'); axs[1].set_ylabel('median (q84-q16)/2/(1+z)'); axs[2].set_xlabel('i'); axs[2].set_ylabel('68% coverage'); axs[2].axhline(0.68, c='k', lw=0.5)
 plt.tight_layout(); plt.show()""",
 """md:## Key findings (run of 2026-11-10; 300k mock galaxies vs 33k COSMOS2020 spec-z galaxies, z<2.2, i<25)
+All data–mock statements use the **spec-z-weighted mock** (apples-to-apples); "full mock" is its unweighted, true i<25 performance.
+
 1. **Pipeline check.** Our LePhare rerun reproduces the official COSMOS2020 photo-z: σ_NMAD 0.0119 vs 0.0107 and η 3.7% vs 3.6% against spec-z. Rerun vs official on all galaxies: σ_NMAD 0.007.
-2. **Scatter vs magnitude matches.** At fixed i, the mock σ_NMAD follows the data closely: ≈0.010 / 0.015 / 0.020 / 0.031 in i = <22 / 22–23 / 23–24 / 24–25, vs 0.009 / 0.011 / 0.018 / 0.031 for the data.
-3. **Catastrophic outliers are under-produced in the mock at faint magnitudes.** At 23–24 the outlier rate is 1.1% (mock) vs 6.4% (data); at 24–25 it is 4.1% vs 13.9%. In the data they concentrate at low true z (z<0.5) and in red i−Ks. The mock has no galaxies at z>2.3, has a less diverse SED library, and has perfectly Gaussian noise (apart from IRAC), all of which suppress outliers.
-4. **Bias.** Overall the mock is biased more negative at faint mags (−0.012 at 24–25 vs −0.004). Its bias also depends on colour: it is positive for blue (g−i<0.5) and negative for red (g−i 1.5–2.5) galaxies, while in the bright brackets at 1.0<z<1.5 the data's bias is flatter for blue galaxies.
-5. **Very blue mock galaxies (g−i<0.25) are a failure mode of the mock** (high η and σ at 0.5<z<1.5), which reflects the kcorrect SED library.
-6. **Weighted to the spec-z selection,** the mock's global metrics (σ_NMAD 0.0125, η 3.9%) look like the data's (0.0119, 3.7%). The agreement is partly coincidental: the mock's extra blue-galaxy outliers stand in for the data's faint low-z outliers.
+2. **Scatter vs magnitude matches to ~10%.** σ_NMAD in i = <22 / 22–23 / 23–24 / 24–25: weighted mock 0.009 / 0.012 / 0.019 / 0.033 vs data 0.009 / 0.011 / 0.018 / 0.031.
+3. **Outlier rates vs magnitude are comparable once the selection is matched.** η is 0.3 / 2.8 / 9.2 / 11.5% for the weighted mock vs 0.6 / 2.1 / 6.4 / 13.9% for the data. The full mock has much lower η (0.2 / 0.5 / 1.1 / 4.1%) because the spec-z sample over-represents blue galaxies (14% have g−i<0.5, vs 6% of the full mock), which are outlier-prone in both. So the low η of the full mock reflects its galaxy population, not better photometry.
+4. **But the redshift dependence differs.** The weighted mock matches the data at z<0.5 (σ_NMAD 0.009 vs 0.009, η 3.7% vs 3.8%). It is worse at 0.5<z<1 (σ_NMAD 0.016 vs 0.010, η 5.1% vs 2.3%) and has fewer outliers at z>1 (η 1.8% vs 4.8% at 1–1.5, 3.2% vs 8.1% at 1.5–2.2). In the (i, z) grid the mock's excess outliers sit at 23<i<25, 0.5<z<1.
+5. **Bias.** The data are biased low (median −0.002 to −0.005, and −0.011 at 1<z<1.5). The weighted mock is ≈0 overall but biased *high* at 1<z<1.5 (+0.003) and at faint 0.75<z<1.5, so in that regime the sign differs.
+6. **Colour dependence.** For g−i ≳ 0.75 the weighted mock tracks the data's bias and σ_NMAD in every magnitude bracket. Its failures are (a) very blue galaxies (g−i<0.5 at i>22: bias up to +0.03, η 15–40%, σ_NMAD up to 0.08, all far above the data) and (b) a bump in bias and η at i−Ks≈1 for i>22 that the data do not show. Conversely, the data's scatter grows towards red i−Ks (>2) at faint magnitudes and the mock's does not.
 7. **PDFs are over-confident in both** (68% coverage ≈0.35–0.45). Part of this is the 0.01 redshift grid: bright objects' PDFs are narrower than one grid step, which produces the PIT spikes at 0 and 1.""",
 ], "02_photoz_performance.ipynb")
 
@@ -305,12 +317,14 @@ nb([
 * **SOM**: a 20×20 SOM trained on the data's broad-band colours (u…Ks). Mock galaxies are mapped onto it to compare cell occupation, redshift per cell, and per-cell photo-z metrics.""",
 SETUP,
 """D = load_data(); Ds = spec_sample(D)
-S = load_sim('sim_main'); S = S[S.ztrue < ZMAX]
+S = load_sim('sim_main'); S = S[S.ztrue < ZMAX].copy()
+S['w_spec'] = spec_weights(S, Ds)          # weights making the mock match the spec-z sample in (i, g-i, i-Ks)
 N0 = load_sim('sim_noiseless'); A = load_sim('sim_adapt')
 N0 = N0[N0.ztrue < ZMAX]; A = A[A.ztrue < ZMAX]
 Sd = S[S.galaxy_id.isin(A.galaxy_id)]
 print(len(Ds), len(S), len(N0), len(A), len(Sd))""",
-"""md:## 1. Noiseless / noisy / noisy + mock zero-points (same galaxies)""",
+"""md:## 1. Noiseless / noisy / noisy + mock zero-points (same galaxies)
+This is a mock-internal comparison on the 40k diagnostic subset. It stays **unweighted**: spec-z weighting would leave only ~3k effective galaxies. The data spec-z curve is shown for orientation only.""",
 """rows = {'noiseless (template-mismatch floor)': df_metrics(N0), 'noisy, no offsets (= sim_main)': df_metrics(Sd), 'noisy + mock AUTO_ADAPT offsets': df_metrics(A)}
 display(pd.DataFrame(rows).T[['N', 'bias', 'nmad', 'eta', 'sig68', 'cov68']].round(4))
 fig, axs = plt.subplots(1, 3, figsize=(16, 5))
@@ -335,24 +349,28 @@ ax.bar(x - 0.2, od, 0.4, label='data (spec-z, i<23)'); ax.bar(x + 0.2, os_, 0.4,
 ax.set_xticks(x); ax.set_xticklabels(list(BANDS), rotation=90); ax.axhline(0, c='k', lw=0.5); ax.set_ylabel('offset [mag]'); ax.legend()
 plt.show()
 pd.DataFrame({'data': od, 'mock': os_}, index=list(BANDS)).T.round(3)""",
-"""md:## 3. Fit quality and best-fit templates""",
+"""md:## 3. Fit quality and best-fit templates
+Data spec-z vs the **spec-z-weighted** mock. The noiseless mock (40k subset) is shown unweighted for reference.""",
 """fig, axs = plt.subplots(1, 4, figsize=(20, 4))
-for name, df, c in [('data spec-z', Ds, 'C0'), ('mock', S, 'C1'), ('mock noiseless', N0, 'k')]:
-    axs[0].hist(np.log10((df.CHI_BEST / df.NBAND_USED).clip(1e-3)), bins=80, range=(-2.5, 2.5), histtype='step', density=True, color=c, label=name)
-    axs[1].hist(df.MOD_BEST, bins=np.arange(0.5, 34.5), histtype='step', density=True, color=c)
-    axs[2].hist(df.EBV_BEST, bins=np.arange(-0.025, 0.55, 0.05), histtype='step', density=True, color=c)
-    axs[3].hist(df.EXTLAW_BEST, bins=np.arange(-0.5, 4.5), histtype='step', density=True, color=c)
+for name, df, w, c in [('data spec-z', Ds, None, 'C0'), ('mock (spec-z weighted)', S, S.w_spec, 'C2'), ('mock noiseless (all)', N0, None, 'k')]:
+    kw = dict(histtype='step', density=True, color=c, weights=w)
+    axs[0].hist(np.log10((df.CHI_BEST / df.NBAND_USED).clip(1e-3)), bins=80, range=(-2.5, 2.5), label=name, **kw)
+    axs[1].hist(df.MOD_BEST, bins=np.arange(0.5, 34.5), **kw)
+    axs[2].hist(df.EBV_BEST, bins=np.arange(-0.025, 0.55, 0.05), **kw)
+    axs[3].hist(df.EXTLAW_BEST, bins=np.arange(-0.5, 4.5), **kw)
 axs[0].set_xlabel('log10 chi2_best / N_band'); axs[0].legend(); axs[1].set_xlabel('best template (1-33: Ell..SB)'); axs[2].set_xlabel('E(B-V)'); axs[3].set_xlabel('extinction law index')
 plt.tight_layout(); plt.show()
-t = binned(S, 'i_mag', np.arange(17, 25.01, 0.5));
-for name, df, c in [('data spec-z', Ds, 'C0'), ('mock', S, 'C1')]:
-    g = df.assign(b=pd.cut(df.i_mag, np.arange(17, 25.01, 0.5))).groupby('b', observed=True)
-    r = (df.CHI_BEST / df.NBAND_USED).groupby(pd.cut(df.i_mag, np.arange(17, 25.01, 0.5)), observed=True).median()
-    plt.plot([i.mid for i in r.index], r.values, 'o-', color=c, label=name)
+import analysis_utils as au
+ibins = np.arange(17, 25.01, 0.5)
+for name, df, w, c in [('data spec-z', Ds, np.ones(len(Ds)), 'C0'), ('mock (spec-z weighted)', S, S.w_spec.values, 'C2')]:
+    x = (df.CHI_BEST / df.NBAND_USED).values; b = np.digitize(df.i_mag, ibins) - 1
+    med = [au._wmed(x[(b == k) & (w > 0)], w[(b == k) & (w > 0)]) if ((b == k) & (w > 0)).sum() > 10 else np.nan for k in range(len(ibins) - 1)]
+    plt.plot(0.5 * (ibins[1:] + ibins[:-1]), med, 'o-', color=c, label=name)
 plt.yscale('log'); plt.xlabel('i'); plt.ylabel('median chi2/N_band'); plt.legend(); plt.show()""",
 """md:## 4. SOM comparison
-SOM trained on the data broad-band colours (all clean i<25 objects in the data run); mock galaxies mapped onto the same cells. Per-cell metrics need ≥10 objects.""",
+SOM trained on the data broad-band colours (all clean i<25 objects in the data run); mock galaxies mapped onto the same cells. Per-cell photo-z metrics and median redshifts compare data spec-z with the **spec-z-weighted** mock (N_eff ≥ 10 per cell). The occupation map compares the full photometric samples, where spec-z selection does not apply.""",
 """from minisom import MiniSom
+import analysis_utils as au
 SB = ['u', 'g', 'r', 'i', 'z', 'y', 'Y', 'J', 'H', 'Ks']
 def cols(df): return np.stack([df[f'm_{a}'] - df[f'm_{b}'] for a, b in zip(SB[:-1], SB[1:])], axis=1)
 Dtr = D[(D.i_mag < 25)]
@@ -364,33 +382,33 @@ def cell(df):
     X = (cols(df) - mu) / sd; X = np.nan_to_num(X)
     return np.concatenate([((X[i:i+50000, None, :] - W[None]) ** 2).sum(-1).argmin(1) for i in range(0, len(X), 50000)])
 Ds['som'] = cell(Ds); S['som'] = cell(S); Dtr = Dtr.assign(som=cell(Dtr))
-def per_cell(df):
+def per_cell(df, w=None):
     out = {}
     for c, g in df.groupby('som'):
-        out[c] = df_metrics(g)
+        out[c] = df_metrics(g, w)
     return pd.DataFrame(out).T.reindex(range(400))
-cd, cs = per_cell(Ds), per_cell(S)
+cd, cs = per_cell(Ds), per_cell(S, 'w_spec')
 occ_d = Dtr.som.value_counts(normalize=True).reindex(range(400)).fillna(0); occ_s = S.som.value_counts(normalize=True).reindex(range(400)).fillna(0)
 fig, axs = plt.subplots(3, 4, figsize=(20, 14))
 for r, m in enumerate(['bias', 'nmad', 'eta']):
     lo, hi = MLIM[m]
-    for c, (t, name) in enumerate([(cd, 'data spec-z'), (cs, 'mock')]):
-        v = t[m].where(t.N >= 10).values.astype(float).reshape(20, 20)
+    for c, (t, name) in enumerate([(cd, 'data spec-z'), (cs, 'mock (spec-z weighted)')]):
+        v = t[m].values.astype(float).reshape(20, 20)
         im = axs[r, c].imshow(v, vmin=lo, vmax=hi, cmap='RdBu_r' if m == 'bias' else 'viridis'); plt.colorbar(im, ax=axs[r, c]); axs[r, c].set_title(f'{m}: {name}')
-    ok = (cd.N >= 10) & (cs.N >= 10)
+    ok = cd[m].notna() & cs[m].notna()
     axs[r, 2].scatter(cd[m][ok], cs[m][ok], s=5 + 3000 * occ_d[ok]); axs[r, 2].plot([lo, hi], [lo, hi], 'k--'); axs[r, 2].set_xlim(lo, hi); axs[r, 2].set_ylim(lo, hi)
-    axs[r, 2].set_xlabel(f'{m} data'); axs[r, 2].set_ylabel(f'{m} mock'); axs[r, 2].set_title('per cell (size ~ data occupation)')
+    axs[r, 2].set_xlabel(f'{m} data'); axs[r, 2].set_ylabel(f'{m} mock (spec-z weighted)'); axs[r, 2].set_title('per cell (size ~ data occupation)')
 im = axs[0, 3].imshow(np.log10((occ_s + 1e-5) / (occ_d + 1e-5)).values.reshape(20, 20), cmap='RdBu_r', vmin=-1, vmax=1); plt.colorbar(im, ax=axs[0, 3]); axs[0, 3].set_title('log10 occupation mock/data')
-zd = Ds.groupby('som').ztrue.median().reindex(range(400)).values.reshape(20, 20); zs = S.groupby('som').ztrue.median().reindex(range(400)).values.reshape(20, 20)
+zd = Ds.groupby('som').ztrue.median().reindex(range(400)).values.reshape(20, 20); zs = pd.Series({c: au._wmed(g.ztrue.values, g.w_spec.values) for c, g in S[S.w_spec > 0].groupby('som')}).reindex(range(400)).values.reshape(20, 20)
 im = axs[1, 3].imshow(zd, cmap='magma', vmin=0, vmax=2.2); plt.colorbar(im, ax=axs[1, 3]); axs[1, 3].set_title('median spec-z per cell (data)')
-im = axs[2, 3].imshow(zs - zd, cmap='RdBu_r', vmin=-0.5, vmax=0.5); plt.colorbar(im, ax=axs[2, 3]); axs[2, 3].set_title('median z_true(mock) - z_spec(data)')
+im = axs[2, 3].imshow(zs - zd, cmap='RdBu_r', vmin=-0.5, vmax=0.5); plt.colorbar(im, ax=axs[2, 3]); axs[2, 3].set_title('median z_true(weighted mock) - z_spec(data)')
 plt.tight_layout(); plt.show()
 print('fraction of mock galaxies in cells with <0.01% data occupation:', occ_s[occ_d < 1e-4].sum().round(3))""",
 """md:## Key findings (run of 2026-11-10)
 1. **The mock's photo-z scatter is set by template mismatch, not by photometric noise.** On the same 40k galaxies, the noiseless run has σ_NMAD 0.019 (η 1.2%) vs 0.022 (η 2.3%) with noise. Up to i≈23 the noiseless and noisy curves coincide. Noise matters only at i>23: σ_NMAD 0.027→0.034 and η 2%→5% at 24<i<25.
-2. **At fixed true redshift the mock is worse than the data** at 0.4<z<1.0 (σ_NMAD ≈0.02 vs ≈0.01). The COSMOS templates fit the mock's kcorrect SEDs less well than they fit real galaxies, even though χ²/N_band is lower in the mock. The per-SOM-cell comparison shows the same thing: mock σ_NMAD sits above the data wherever the data are very precise.
+2. **At fixed true redshift the mock is worse than the data** at 0.4<z<1.0. σ_NMAD is ≈0.02 for the full mock and 0.016 spec-z weighted, vs ≈0.010 for the data. The COSMOS templates fit the mock's kcorrect SEDs less well than they fit real galaxies, even though χ²/N_band is lower in the mock. The per-SOM-cell comparison shows the same thing: mock σ_NMAD sits above the data wherever the data are very precise.
 3. **Zero-point offsets.** Mock AUTO_ADAPT offsets are ≲0.02 mag in all optical/NIR bands, apart from IRAC ch1 (−0.07) and ch2 (−0.03); applying them changes nothing. The data offsets are larger (up to −0.16 in IA679, −0.07 in r) because they also absorb real calibration and template errors.
 4. **Best-fit templates.** Mock galaxies pile onto a few COSMOS templates (7, 22, 25) and mostly the default extinction law. Real galaxies spread over more templates (especially the bluer 27–31) and use the bump extinction laws much more. This is the limited SED diversity of the SDSS-based library.
-5. **SOM occupation.** The mock leaves parts of the data colour space under-populated (blue/occupation <0.1 cells), and in those cells its median z differs strongly from the data. Per-cell metrics are only meaningful where both are populated.""",
+5. **SOM, per cell (data vs spec-z-weighted mock).** Where both are populated, σ_NMAD scatters around the 1:1 line with the mock somewhat above it in the most precise cells. Per-cell η is mostly lower in the mock, with a few cells (blue edge of the map) far higher. The mock leaves parts of the data colour space under-populated (occupation ratio <0.1), and in those cells its median z differs strongly from the data.""",
 ], "03_diagnostics.ipynb")
 print("notebooks written")

@@ -96,10 +96,10 @@ def metrics(zp, zt, w=None, sig68=None, pit=None, nmin=10):
     zp, zt, w = zp[ok], zt[ok], w[ok]
     nan = dict(N=len(zt), Neff=np.nan, bias=np.nan, nmad=np.nan, eta=np.nan, bias_err=np.nan, nmad_err=np.nan,
                eta_err=np.nan, sig68=np.nan, cov68=np.nan)
-    if len(zt) < nmin:
+    neff = w.sum() ** 2 / (w ** 2).sum() if len(w) else 0.0
+    if len(zt) < nmin or neff < nmin:          # nmin applies to the effective number for weighted samples
         return nan
     dz = (zp - zt) / (1 + zt)
-    neff = w.sum() ** 2 / (w ** 2).sum()
     b = _wmed(dz, w); s = 1.4826 * _wmed(np.abs(dz - b), w); e = np.average(np.abs(dz) > 0.15, weights=w)
     r = dict(N=len(zt), Neff=neff, bias=b, nmad=s, eta=e, bias_err=1.2533 * s / np.sqrt(neff),
              nmad_err=s / np.sqrt(2 * neff), eta_err=np.sqrt(max(e * (1 - e), 1 / neff) / neff),

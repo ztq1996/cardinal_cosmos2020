@@ -17,19 +17,27 @@ The executed notebooks (with all figures) are in `notebooks/`. Each ends with a 
 | `02_photoz_performance.ipynb` | z_true vs z_phot; bias / σ_NMAD / η on the (i, z) grid; vs colour in i-mag brackets; vs colour in z brackets at fixed i; colour–colour maps; PIT |
 | `03_diagnostics.ipynb` | noiseless vs noisy mock (template-mismatch floor), zero-point offsets, χ² and best-fit templates, SOM cell comparison |
 
-Headline numbers (i<25, z<2.2; data = 33k COSMOS2020 galaxies with spec-z; mock = 300k galaxies vs true z):
+Headline numbers (i<25, z<2.2). Data = 33k COSMOS2020 galaxies with spec-z. Mock = 300k galaxies vs true z, either
+weighted to the spec-z sample's (i, g−i, i−Ks) distribution (the apples-to-apples comparison) or all galaxies (the
+mock's true i<25 performance):
 
-| i range | σ_NMAD mock / data | outlier rate η mock / data |
+| i range | σ_NMAD: data / mock weighted / mock all | outlier rate η: data / mock weighted / mock all |
 |---|---|---|
-| < 22 | 0.010 / 0.009 | 0.2% / 0.6% |
-| 22–23 | 0.015 / 0.011 | 0.5% / 2.1% |
-| 23–24 | 0.020 / 0.018 | 1.1% / 6.4% |
-| 24–25 | 0.031 / 0.031 | 4.1% / 13.9% |
+| < 22 | 0.009 / 0.009 / 0.010 | 0.6% / 0.3% / 0.2% |
+| 22–23 | 0.011 / 0.012 / 0.015 | 2.1% / 2.8% / 0.5% |
+| 23–24 | 0.018 / 0.019 / 0.020 | 6.4% / 9.2% / 1.1% |
+| 24–25 | 0.031 / 0.033 / 0.031 | 13.9% / 11.5% / 4.1% |
 
-Our LePhare rerun on the real data reproduces the official COSMOS2020 photo-z: σ_NMAD 0.0119 vs 0.0107 and η 3.7% vs
-3.6% against spec-z. The mock's scatter is dominated by the mismatch between its (SDSS kcorrect) SEDs and the COSMOS
-templates rather than by noise, and it under-produces faint catastrophic outliers. See the notebooks for the colour
-dependence.
+* **Pipeline check.** Our LePhare rerun on the real data reproduces the official COSMOS2020 photo-z: σ_NMAD 0.0119 vs
+  0.0107 and η 3.7% vs 3.6% against spec-z.
+* **Magnitude dependence.** Matched to the spec-z selection, the mock reproduces the data's σ_NMAD and outlier rate vs
+  magnitude.
+* **Redshift and colour dependence differ.** The mock is worse at 0.5<z<1, has fewer outliers at z>1, fails for very
+  blue galaxies (g−i<0.5), and shows a bias/outlier feature at i−Ks≈1.
+* **Origin of the mock's errors.** Its scatter is dominated by the mismatch between its SDSS-kcorrect SEDs and the
+  COSMOS templates rather than by noise.
+
+See the notebooks for details.
 
 ## How the mock is built
 1. **Galaxies.** A 10.07 deg² patch of Cardinal (`Chinchilla-3-triofile.101`, RA 126.7–132.1, Dec 40.5–43.0; 3.0M
@@ -114,8 +122,10 @@ Random seeds are fixed, so the noise realisation and subsamples are reproducible
   The data keep the COSMOS IRAC convention (`FILTER_CALIB=1`).
 * **Mock coverage.** Cardinal has no galaxies above z≈2.3 and is incomplete beyond i≈25.5, so analyses use i<25 and z<2.2.
   The data truth sample is spec-z objects with official `lp_type==0` (galaxies).
-* **Spec-z weighting.** "Spec-z weighted" mock results reweight the mock to the spec-z sample's distribution in
-  (i, g−i, i−Ks), to mimic its selection in those three quantities only.
+* **Spec-z weighting.** Every data–mock comparison in the notebooks uses the mock reweighted to the spec-z sample's
+  distribution in (i, g−i, i−Ks). This mimics its selection in those three quantities only. The unweighted mock is
+  shown alongside as the mock's true performance. Mock-internal diagnostics on the 40k subset stay unweighted for
+  statistics.
 * **PDF calibration.** The LePhare z-grid step (0.01) is comparable to the bright-galaxy scatter, so PIT/coverage at
   i<22 are partly grid-limited.
 * **Bright-end errors.** In sparsely populated bright magnitude bins (e.g. u<21), the noise model assigns sky-limited
